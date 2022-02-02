@@ -6,6 +6,9 @@ authors = ["Alexander Lyotov <sippie84@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
+python-telegram-bot = {extras = ["socks"], version = "^13.10"}
+httpx = "^0.22.0"
+pydantic = "^1.9.0"
 
 [tool.poetry.dev-dependencies]
 
