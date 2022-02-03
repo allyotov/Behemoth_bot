@@ -8,21 +8,49 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
+MONTHS = {
+    '01': 'января',
+    '02': 'февраля',
+    '03': 'марта',
+    '04': 'апреля',
+    '05': 'мая',
+    '06': 'июня',
+    '07': 'июля',
+    '08': 'августа',
+    '09': 'сентября',
+    '10': 'октября',
+    '11': 'ноября',
+    '12': 'декабря'
+}
+
+WEEKDAYS = {
+    '0': 'понедельник',
+    '1': 'вторник',
+    '2': 'среда',
+    '3': 'четверг',
+    '4': 'пятница',
+    '5': 'суббота',
+    '6': 'воскресенье'
+}
+
+
 MEETINGS_MESSAGE_TEMPLATE = """<b><strong>{0}</strong></b>
+{1} {2} {3}
+{4}
+{5}
+{6}
 
-Изучаемый отрывок: <b><strong>{1}</strong></b>;
+Изучаемый отрывок: <b><strong>{7}</strong></b>;
 
-{2}
-
-Время проведения: {3};
-Будет проводится: {4}."""
+{8}
+"""
 
 NEWS_MESSAGE_TEMPLATE = """<b><strong>{0}</strong></b>
 
 {1}
 
-Время cоздания: {2};
-(Внёс в базу бота: {3}.)"""
+{2} {3} {4} {5};
+"""
 
 DATETIME_TEMPLATE = '%Y-%m-%dT%H:%M:%S%z'
 
@@ -44,10 +72,14 @@ def convert_meetings_to_messages(response: list[dict]) -> list[str]:
 
         msg = MEETINGS_MESSAGE_TEMPLATE.format(
             meeting.name,
+            datetime.strftime(meeting_datetime, '%d'),
+            MONTHS[datetime.strftime(meeting_datetime, '%m')],
+            datetime.strftime(meeting_datetime, '%Y'),
+            WEEKDAYS[datetime.strftime(meeting_datetime, '%w')],
+            datetime.strftime(meeting_datetime, '%H:%M'),
+            meeting.intramural,
             meeting.fragment,
             meeting.comment,
-            meeting.time,
-            meeting.intramural,
         )
         tm_messages.append(msg)
     return tm_messages, last_datetime
@@ -66,8 +98,10 @@ def convert_news_to_messages(response: list[dict]) -> list[str]:
         msg = NEWS_MESSAGE_TEMPLATE.format(
             newsitem.title,
             newsitem.text,
-            newsitem.time_created,
-            newsitem.author,
+            datetime.strftime(newsitem_datetime, '%d'),
+            MONTHS[datetime.strftime(newsitem_datetime, '%m')],
+            datetime.strftime(newsitem_datetime, '%Y'),
+            datetime.strftime(newsitem_datetime, '%H:%M'),
         )
         tm_messages.append(msg)
     return tm_messages, last_datetime
