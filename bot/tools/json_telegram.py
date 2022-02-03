@@ -29,7 +29,7 @@ DATETIME_TEMPLATE = '%Y-%m-%dT%H:%M:%S%z'
 
 def convert_meetings_to_messages(response: list[dict]) -> list[str]:
     tm_messages = []
-    last_datetime = datetime.strptime(response[0]['time'], DATETIME_TEMPLATE)
+    last_datetime = current_datetime()
     for result_num, meeting_str in enumerate(response, start=1):
         meeting = Meeting(**meeting_str)
         if meeting.intramural == '0':
@@ -55,7 +55,7 @@ def convert_meetings_to_messages(response: list[dict]) -> list[str]:
 
 def convert_news_to_messages(response: list[dict]) -> list[str]:
     tm_messages = []
-    last_datetime = datetime.strptime(response[0]['time_created'], DATETIME_TEMPLATE)
+    last_datetime = week_ago_datetime()
     for result_num, news_str in enumerate(response, start=1):
         newsitem = NewsItem(**news_str)
 
