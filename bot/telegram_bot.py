@@ -17,6 +17,10 @@ def main():
 
     bot_dispatcher.add_handler(CommandHandler('start', commands.hello, pass_job_queue=True))
 
+    bot_dispatcher.add_handler(CommandHandler('news', commands.get_news))
+
+    bot_dispatcher.add_handler(CommandHandler('meetings', commands.get_meetings))
+
     logger.info('Бот стартовал;')
 
     behemoth_bot.start_polling()
