@@ -29,7 +29,7 @@ class BehemothClient:
         try:
             r = httpx.post(
                 url=self.subscribers_url,
-                content=orjson.dumps(newsitem),
+                content=orjson.dumps(subscriber),
                 headers={'content-type': 'application/json'},
             )
             r.raise_for_status()
