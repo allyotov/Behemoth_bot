@@ -1,6 +1,7 @@
 import logging
+from re import sub
 import httpx
-from bot.client import Subscriber
+from bot.client import Subscriber, NewsItem
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -17,12 +18,13 @@ class BehemothClient:
     def search_news(self, **parameters) -> str:
         response = httpx.get(self.news_url, params=parameters)
         response.raise_for_status()
-        return response.json()
+        return [NewsItem(**json_dict) for json_dict in response.json()]
 
     def get_subscribers(self, **parameters):
         response = httpx.get(self.subscribers_url, params=parameters)
         response.raise_for_status()
-        return response.json()
+        logger.debug(response.json)
+        return [Subscriber(**json_dict) for json_dict in response.json()]
 
     def send_subscriber(self, subscriber: Subscriber) -> None:
         try:
@@ -35,7 +37,20 @@ class BehemothClient:
                 headers={'content-type': 'application/json'},
             )
             r.raise_for_status()
-            logger.debug('Очередной подписчик был тправлен в бекенд')
+            logger.debug('Очередной подписчик был отправлен в бекенд')
         except (httpx.ConnectError, httpx.RemoteProtocolError, httpx.HTTPStatusError) as exc:
-            logger.debug('Не могу отправить новости из-за проблем с соединением.')
+            logger.debug('Не могу отправить подписчика из-за проблем с соединением.')
+            logger.exception(exc)
+
+    def edit_subscriber(self, subscriber: Subscriber):
+        try:
+            resp = httpx.put(
+                url=f'{self.subscribers_url}{subscriber.id}/',
+                data=subscriber.json(),
+                headers={'content-type': 'application/json'},
+            )
+            resp.raise_for_status()
+            logger.debug('Очередной подписчик был изменен в бекенде')
+        except (httpx.ConnectError, httpx.RemoteProtocolError, httpx.HTTPStatusError) as exc:
+            logger.debug('Не могу отредактировать подписчика из-за проблем с соединением.')
             logger.exception(exc)

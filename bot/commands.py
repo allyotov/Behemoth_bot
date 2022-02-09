@@ -5,13 +5,14 @@ import pytz
 
 import httpx
 from telegram import ParseMode
+from bot import client
 #from telegram.ext import ConversationHandler
 
 from bot.client import Subscriber, BehemothClient as Client
 # from bot.client import Subscriber
 from bot.config import backend_url, prev_days, hello_message
-from bot.tools.json_telegram import convert_news_to_messages
-from bot.tools.initial_datetime import current_datetime, week_ago_datetime
+from bot.tools.make_messages import convert_news_to_messages
+from bot.tools.initial_datetime import get_current_datetime
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -22,71 +23,99 @@ def convert_date_to_str(date_obj):
     return datetime.strftime(date_obj, '%Y-%m-%d-%H-%M-%S-%z')
 
 
-def check_updates(context):
-    logger.debug(context)
-    context.bot.send_message(chat_id=context.job.context, text='Здесь будет периодическая проверка новостей и встреч')
-
-
 def hello(update, context):
-    subscribers = get_subscriber_list_from_backend()
-    if subscribers:
-        pass
-    else:
-        ids = subscribers
-    logger.info(subscribers)
-    user = update.message.from_user
-    if user['id'] not in ids:
-        # save id into backend
-        backend_client = Client(backend_url)
-        backend_client.send_subscriber(Subscriber(id=user['id'], last_update=(datetime.now())))
-    # if user_id not in subscribers
-    update.message.reply_text(hello_message)
-    return
-    if 'last_news' not in context.user_data:
-        context.user_data['last_news'] = week_ago_datetime()
-    if 'last_meeting' not in context.user_data:
-        context.user_data['last_meeting'] = current_datetime()
-
- 
-    context.job_queue.run_repeating(get_news, 5, context=(update.message.chat_id, context.user_data))
-    context.job_queue.run_repeating(get_meetings, 5, context=(update.message.chat_id, context.user_data))
+    try:
+        behemoth_client = Client(backend_url)
+        subscribers = behemoth_client.get_subscribers()
+        if not subscribers:
+            logger.debug('Пока нет ни одного подписчика, создаём нового.')
+            ids = []
+        else:
+            ids = [s.id for s in subscribers]
+            logger.debug(ids)
+        logger.info(subscribers)
+        user = update.message.from_user
+        logger.debug(user)
+        if user['id'] not in ids:
+            # save id into backend
+            backend_client = Client(backend_url)
+            backend_client.send_subscriber(Subscriber(id=user['id'], last_update=(get_current_datetime - timedelta(days=prev_days))))
+        # if user_id not in subscribers
+        update.message.reply_text(hello_message)
+    except Exception as exc:
+        logging.exception(exc)
+        update.message.reply_text('Что-то пошло не так. Попробуйте отправить /start позже.')
+        return
 
 
 def get_news(context):
-    chat_id, user_data = context.job.context
+    logger.debug('Проверяем новости в бекенде.')
     try:
         behemoth_client = Client(backend_url)
+        
+        # 1. запрашиваем подписчиков в бекенде
+        subscribers = behemoth_client.get_subscribers()
+        if not subscribers:
+            logger.debug('Нет ни одного подписчика.')
+            return
+        logger.debug(subscribers)
+
+        # 2. определяем наименьшую дату последнего обновелния среди них
+        earliest_last_update = get_earliest_last_update(subscribers)
+        logger.debug(earliest_last_update)
+        logger.debug(type(earliest_last_update))
+
+        # 3. запрашиваем новости в бекенде начиная с наименьшей даты последнего обновления 
         parameters = {'period': 'from',
-                        'date': datetime.strftime(user_data['last_news'], '%Y-%m-%d-%H-%M-%S-%z')}
-        response = behemoth_client.search_news(**parameters)
-        logger.debug(response)
-        logger.debug(type(response))
-        tm_messages, newsitem_datetime = convert_news_to_messages(response)
-        logger.info(newsitem_datetime)
-        if newsitem_datetime - user_data['last_news'] > timedelta(seconds=0):
-            user_data['last_news'] = newsitem_datetime
-        logger.info('---->')
-        logger.info(user_data['last_news'])
-        if tm_messages:
-            context.bot.send_message(chat_id=chat_id, text='Свежие новости:')
-        for msg in tm_messages:
-            context.bot.send_message(chat_id=chat_id, text=msg, parse_mode=ParseMode.HTML)
+                        'date': datetime.strftime(earliest_last_update, '%Y-%m-%d-%H-%M-%S-%z')}
+        news = behemoth_client.search_news(**parameters)
+        logger.debug(news)
+        logger.debug(type(news))
+        
+        if not news:
+            logger.debug('Свежих новостей нет.')
+            return
+
+        passed_meetings_msgs, future_meetings_msgs, news_msgs = convert_news_to_messages(news)
+        
+        present_moment = get_current_datetime()
+
+        for subscriber in subscribers:
+            # 1. получаем дату последнего обновления
+            last_update = subscriber.last_update
+            # 2. обрабатываем новости
+            actual_news_msgs = [msg['message'] for msg in news_msgs if msg['update_time'] - last_update > timedelta(seconds=0)]
+            if actual_news_msgs:
+                context.bot.send_message(chat_id=subscriber.id, text='<b>Свежие новости:</b>', parse_mode=ParseMode.HTML)
+                for msg in actual_news_msgs:
+                    context.bot.send_message(chat_id=subscriber.id, text=msg, parse_mode=ParseMode.HTML)
+            # 3. обрабатываем прошедшие встречи
+            actual_passed_meetings_msgs = [msg['message'] for msg in passed_meetings_msgs if msg['update_time'] - last_update > timedelta(seconds=0)]
+            if actual_passed_meetings_msgs:
+                context.bot.send_message(chat_id=subscriber.id, text='<b>Состоявшиеся встречи:</b>', parse_mode=ParseMode.HTML)
+                for msg in actual_passed_meetings_msgs:
+                    context.bot.send_message(chat_id=subscriber.id, text=msg, parse_mode=ParseMode.HTML)
+            # 4. обрабатываем предстоящие встречи
+            actual_future_meetings_msgs = [msg['message'] for msg in future_meetings_msgs if msg['update_time'] - last_update > timedelta(seconds=0)]
+            if actual_future_meetings_msgs:
+                context.bot.send_message(chat_id=subscriber.id, text='<b>Запланированы встречи:</b>', parse_mode=ParseMode.HTML)
+                for msg in actual_future_meetings_msgs:
+                    context.bot.send_message(chat_id=subscriber.id, text=msg, parse_mode=ParseMode.HTML)
+            # 6. сохраняем новую дату последнего обновления
+            subscriber.last_update = present_moment
+            behemoth_client.edit_subscriber(subscriber)
+            logger.debug('Дата последнего обновления обновлена.')
 
     except Exception as exc:
-        logging.exception(exc)
+        logger.exception(exc)
         msg = 'Ой, у нас что-то пошло не так. Попробуй, пожалуйста, запросить встречи чуть позже.'
-        context.bot.send_message(chat_id=chat_id, text=msg)
+        # context.bot.send_message(chat_id=chat_id, text=msg)
+        logger.debug(msg)
 
 
-def get_subscriber_list_from_backend():
-    try:
-        behemoth_client = Client(backend_url)
-        response = behemoth_client.get_subscribers()
-        logger.debug(response)
-        return response
-    except Exception as exc:
-        logging.exception(exc)
+def get_earliest_last_update(subscribers):
+    return min([s.last_update for s in subscribers])
 
 
-def convert_subscriber(subscriber, id: int, last_update: datetime) -> Subscriber:
-    return Subscriber(id=id, last_update=last_update)
+def deactivate_subscriber(update, context):
+    logger.debug('Деактивация пользователя запущена!')
