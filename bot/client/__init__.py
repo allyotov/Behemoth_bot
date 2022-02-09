@@ -1,5 +1,5 @@
-from bot.client import BehemothClient
 from bot.client.serializers import Subscriber
+from bot.client.client import BehemothClient
 
 
 __all__ = [

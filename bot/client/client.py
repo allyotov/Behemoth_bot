@@ -1,6 +1,5 @@
 import logging
 import httpx
-import orjson
 from bot.client import Subscriber
 
 logging.basicConfig(level=logging.DEBUG)
@@ -25,11 +24,14 @@ class BehemothClient:
         response.raise_for_status()
         return response.json()
 
-    def send_subsceriber(self, subscriber: Subscriber) -> None:
+    def send_subscriber(self, subscriber: Subscriber) -> None:
         try:
+            logger.debug(subscriber)
+            logger.debug(type(subscriber))
+            logger.debug(subscriber.last_update)
             r = httpx.post(
                 url=self.subscribers_url,
-                content=orjson.dumps(subscriber),
+                content=subscriber.json(),
                 headers={'content-type': 'application/json'},
             )
             r.raise_for_status()

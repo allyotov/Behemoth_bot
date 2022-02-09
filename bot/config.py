@@ -15,5 +15,5 @@ proxy = {
     },
 }
 
-prev_days = os.environ['PREV_DAYS']
+prev_days = int(os.environ['PREV_DAYS'])
 hello_message = os.environ['HELLO_MESSAGE']

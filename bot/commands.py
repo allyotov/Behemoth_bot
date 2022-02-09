@@ -7,8 +7,8 @@ import httpx
 from telegram import ParseMode
 #from telegram.ext import ConversationHandler
 
-from bot.client import BehemothClient as Client
-from bot.client import Subscriber
+from bot.client import Subscriber, BehemothClient as Client
+# from bot.client import Subscriber
 from bot.config import backend_url, prev_days, hello_message
 from bot.tools.json_telegram import convert_news_to_messages
 from bot.tools.initial_datetime import current_datetime, week_ago_datetime
@@ -37,7 +37,8 @@ def hello(update, context):
     user = update.message.from_user
     if user['id'] not in ids:
         # save id into backend
-        Client.send_subscriber(id=id, last_update=(datetime.now() - timedelta(days=prev_days)))
+        backend_client = Client(backend_url)
+        backend_client.send_subscriber(Subscriber(id=user['id'], last_update=(datetime.now())))
     # if user_id not in subscribers
     update.message.reply_text(hello_message)
     return

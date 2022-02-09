@@ -1,9 +1,8 @@
 from datetime import datetime
 
-from dataclasses import dataclass
+from pydantic import BaseModel
 
 
-@dataclass
-class Subscriber:
+class Subscriber(BaseModel):
     id: int
     last_update: datetime
