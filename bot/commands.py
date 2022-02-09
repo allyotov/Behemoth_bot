@@ -7,13 +7,14 @@ import httpx
 from telegram import ParseMode
 #from telegram.ext import ConversationHandler
 
-from bot.client.client import BehemothClient as Client
+from bot.client import BehemothClient as Client
+from bot.client import Subscriber
 from bot.config import backend_url
-from bot.tools.json_telegram import convert_meetings_to_messages, convert_news_to_messages
+from bot.tools.json_telegram import convert_news_to_messages
 from bot.tools.initial_datetime import current_datetime, week_ago_datetime
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -27,20 +28,30 @@ def check_updates(context):
 
 
 def hello(update, context):
+    subscribers = get_subscriber_list_from_backend()
+    if subscribers:
+        pass
+    else:
+        ids = subscribers
+    logger.info(subscribers)
     user = update.message.from_user
-    print('You talk with user {} and his user ID: {} '.format(user['username'], user['id']))
-    return
-    if 'last_news' not in context.user_data:
-        context.user_data['last_news'] = week_ago_datetime()
-    if 'last_meeting' not in context.user_data:
-        context.user_data['last_meeting'] = current_datetime()
-
+    if user['id'] not in ids:
+        # save id into backend
+        Client.    Subscriber(id=id, last_update=last_update)
+    # if user_id not in subscribers
     update.message.reply_text(''.join([
         'Привет, дорогой любитель Священного Писания! ',
         'Тебя приветствует бот библейского кружка Бехемот. ',
         'Он поможет тебе не пропускать очередные встречи и ',
         ' знать какие отрывки будут читаться на них.',
     ]))
+    return
+    if 'last_news' not in context.user_data:
+        context.user_data['last_news'] = week_ago_datetime()
+    if 'last_meeting' not in context.user_data:
+        context.user_data['last_meeting'] = current_datetime()
+
+ 
     context.job_queue.run_repeating(get_news, 5, context=(update.message.chat_id, context.user_data))
     context.job_queue.run_repeating(get_meetings, 5, context=(update.message.chat_id, context.user_data))
 
@@ -75,8 +86,11 @@ def get_subscriber_list_from_backend():
     try:
         behemoth_client = Client(backend_url)
         response = behemoth_client.get_subscribers()
-        response.raise_for_status()
         logger.debug(response)
         return response
     except Exception as exc:
         logging.exception(exc)
+
+
+def convert_subscriber(subscriber, id: int, last_update: datetime) -> Subscriber:
+    return Subscriber(id=id, last_update=last_update)

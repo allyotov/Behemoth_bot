@@ -4,14 +4,11 @@ from telegram.ext import CommandHandler, Updater
 
 from bot import commands, config
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-subscribers = []
 
 def main():
-    subscribers = commands.get_subscriber_list_from_backend()
-
     behemoth_bot = Updater(config.api_key, use_context=True, request_kwargs=config.proxy)
 
     bot_dispatcher = behemoth_bot.dispatcher

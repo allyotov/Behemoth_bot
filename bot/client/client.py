@@ -1,5 +1,10 @@
+import logging
 import httpx
+import orjson
+from bot.client import Subscriber
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 class BehemothClient:
 
@@ -7,21 +12,28 @@ class BehemothClient:
     timeout = 5
 
     def __init__(self, backend_url: str):
-        self.meetings_url = '{0}{1}'.format(backend_url, '/api/meetings/')
         self.news_url = '{0}{1}'.format(backend_url, '/api/news/')
-        self.subscribers_url = '{0}{1}'.format(backend_url, '/api/news/')
+        self.subscribers_url = '{0}{1}'.format(backend_url, '/api/subscribers/')
 
     def search_news(self, **parameters) -> str:
         response = httpx.get(self.news_url, params=parameters)
         response.raise_for_status()
         return response.json()
 
-    def search_meetings(self, **parameters) -> str:
-        response = httpx.get(self.meetings_url, params=parameters)
+    def get_subscribers(self, **parameters):
+        response = httpx.get(self.subscribers_url, params=parameters)
         response.raise_for_status()
         return response.json()
 
-    def get_subscribers(self, **parameters):
-        response = httpx.get(self.meetings_url, params=parameters)
-        response.raise_for_status()
-        return response.json()
+    def send_subsceriber(self, subscriber: Subscriber) -> None:
+        try:
+            r = httpx.post(
+                url=self.subscribers_url,
+                content=orjson.dumps(newsitem),
+                headers={'content-type': 'application/json'},
+            )
+            r.raise_for_status()
+            logger.debug('Очередной подписчик был тправлен в бекенд')
+        except (httpx.ConnectError, httpx.RemoteProtocolError, httpx.HTTPStatusError) as exc:
+            logger.debug('Не могу отправить новости из-за проблем с соединением.')
+            logger.exception(exc)
