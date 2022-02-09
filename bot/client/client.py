@@ -1,4 +1,5 @@
 import logging
+from re import sub
 import httpx
 from bot.client import Subscriber, NewsItem
 
@@ -36,7 +37,20 @@ class BehemothClient:
                 headers={'content-type': 'application/json'},
             )
             r.raise_for_status()
-            logger.debug('Очередной подписчик был тправлен в бекенд')
+            logger.debug('Очередной подписчик был отправлен в бекенд')
         except (httpx.ConnectError, httpx.RemoteProtocolError, httpx.HTTPStatusError) as exc:
-            logger.debug('Не могу отправить новости из-за проблем с соединением.')
+            logger.debug('Не могу отправить подписчика из-за проблем с соединением.')
+            logger.exception(exc)
+
+    def edit_subscriber(self, subscriber: Subscriber):
+        try:
+            resp = httpx.put(
+                url=f'{self.subscribers_url}{subscriber.id}/',
+                data=subscriber.json(),
+                headers={'content-type': 'application/json'},
+            )
+            resp.raise_for_status()
+            logger.debug('Очередной подписчик был изменен в бекенде')
+        except (httpx.ConnectError, httpx.RemoteProtocolError, httpx.HTTPStatusError) as exc:
+            logger.debug('Не могу отредактировать подписчика из-за проблем с соединением.')
             logger.exception(exc)
