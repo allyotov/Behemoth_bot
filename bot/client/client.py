@@ -22,7 +22,9 @@ class BehemothClient:
     def get_subscribers(self, **parameters):
         response = httpx.get(self.subscribers_url, params=parameters)
         response.raise_for_status()
-        return response.json()
+        logger.debug(response.json)
+        return [Subscriber(**json_dict) for json_dict in response.json()]
+    
 
     def send_subscriber(self, subscriber: Subscriber) -> None:
         try:

@@ -13,9 +13,7 @@ def main():
 
     bot_dispatcher = behemoth_bot.dispatcher
 
-    #bot_dispatcher.job_queue.run_repeating(commands.check_updates, interval=3, first=0, name='update_cheking', context=behemoth_bot)
-
-    # # # behemoth_bot.job_queue.run_repeating(commands.get_news, 5, context=(update.message.chat_id, context.user_data))
+    behemoth_bot.job_queue.run_repeating(commands.get_news, 5)
 
     bot_dispatcher.add_handler(CommandHandler('start', commands.hello, pass_job_queue=True))
 
