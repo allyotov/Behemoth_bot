@@ -29,16 +29,18 @@ def check_updates(context):
 
 def hello(update, context):
     subscribers = get_subscriber_list_from_backend()
-    if subscribers:
-        pass
+    if not subscribers:
+        logger.debug('Пока нет ни одного подписчика, создаём нового.')
+        ids = []
     else:
-        ids = subscribers
+        ids = [s.id for s in subscribers]
+        logger.debug(ids)
     logger.info(subscribers)
     user = update.message.from_user
     if user['id'] not in ids:
         # save id into backend
         backend_client = Client(backend_url)
-        backend_client.send_subscriber(Subscriber(id=user['id'], last_update=(datetime.now())))
+        backend_client.send_subscriber(Subscriber(id=user['id'], last_update=(datetime.now() - timedelta(days=prev_days))))
     # if user_id not in subscribers
     update.message.reply_text(hello_message)
 
@@ -47,18 +49,30 @@ def get_news(context):
     logger.debug('Проверяем новости в бекенде.')
     try:
         behemoth_client = Client(backend_url)
+        
+        # 1. запрашиваем подписчиков в бекенде
         subscribers = behemoth_client.get_subscribers()
+        if not subscribers:
+            logger.debug('Нет ни одного подписчика.')
+            return
         logger.debug(subscribers)
+        
+        # 2. определяем наименьшую дату последнего обновелния среди них
         earliest_last_update = get_earliest_last_update(subscribers)
         logger.debug(earliest_last_update)
         logger.debug(type(earliest_last_update))
+
+        # 3. запрашиваем новости в бекенде начиная с наименьшей даты последнего обновления 
         parameters = {'period': 'from',
                         'date': datetime.strftime(earliest_last_update, '%Y-%m-%d-%H-%M-%S-%z')}
-        response = behemoth_client.search_news(**parameters)
-        logger.debug(response)
-        logger.debug(type(response))
+        news = behemoth_client.search_news(**parameters)
+        logger.debug(news)
+        logger.debug(type(news))
         
-        # tm_messages, newsitem_datetime = convert_news_to_messages(response)
+        if not news:
+            logger.debug('Свежих новостей нет.')
+            return
+        # passed_meetings_msgs, future_meetings_msg, news_messages = convert_news_to_messages(response)
         # logger.info(newsitem_datetime)
 
         # for subscriber in subscribers:
@@ -83,8 +97,10 @@ def get_news(context):
         # context.bot.send_message(chat_id=chat_id, text=msg)
         logger.debug(msg)
 
+
 def get_earliest_last_update(subscribers):
     return min([s.last_update for s in subscribers])
+
 
 def get_subscriber_list_from_backend():
     try:

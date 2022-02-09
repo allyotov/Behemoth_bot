@@ -1,6 +1,6 @@
 import logging
 import httpx
-from bot.client import Subscriber
+from bot.client import Subscriber, NewsItem
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -17,14 +17,13 @@ class BehemothClient:
     def search_news(self, **parameters) -> str:
         response = httpx.get(self.news_url, params=parameters)
         response.raise_for_status()
-        return response.json()
+        return [NewsItem(**json_dict) for json_dict in response.json()]
 
     def get_subscribers(self, **parameters):
         response = httpx.get(self.subscribers_url, params=parameters)
         response.raise_for_status()
         logger.debug(response.json)
         return [Subscriber(**json_dict) for json_dict in response.json()]
-    
 
     def send_subscriber(self, subscriber: Subscriber) -> None:
         try:
