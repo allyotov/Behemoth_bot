@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timedelta
+from urllib import response
 import pytz 
 
 import httpx
@@ -26,9 +27,14 @@ def check_updates(context):
 
 
 def hello(update, context):
-    context.user_data['last_news'] = week_ago_datetime()
-    context.user_data['last_meeting'] = current_datetime()
-    logger.info(context.user_data['last_meeting'])
+    user = update.message.from_user
+    print('You talk with user {} and his user ID: {} '.format(user['username'], user['id']))
+    return
+    if 'last_news' not in context.user_data:
+        context.user_data['last_news'] = week_ago_datetime()
+    if 'last_meeting' not in context.user_data:
+        context.user_data['last_meeting'] = current_datetime()
+
     update.message.reply_text(''.join([
         'Привет, дорогой любитель Священного Писания! ',
         'Тебя приветствует бот библейского кружка Бехемот. ',
@@ -65,27 +71,12 @@ def get_news(context):
         context.bot.send_message(chat_id=chat_id, text=msg)
 
 
-def get_meetings(context):
-    chat_id, user_data = context.job.context
+def get_subscriber_list_from_backend():
     try:
         behemoth_client = Client(backend_url)
-        parameters = {'period': 'from',
-                        'date': datetime.strftime(user_data['last_meeting'], '%Y-%m-%d-%H-%M-%S-%z')}
-        response = behemoth_client.search_meetings(**parameters)
+        response = behemoth_client.get_subscribers()
+        response.raise_for_status()
         logger.debug(response)
-        logger.debug(type(response))
-        tm_messages, meeting_datetime = convert_meetings_to_messages(response)
-        logger.info(meeting_datetime)
-        if meeting_datetime - user_data['last_meeting'] > timedelta(days=0):
-            user_data['last_meeting'] = meeting_datetime
-        if tm_messages:
-            text_str = 'Запланирована новая встреча:'
-            if len(tm_messages) > 0:
-                text_str = 'Запланированы новые встречи:'
-            context.bot.send_message(chat_id=chat_id, text=text_str)
-        for msg in tm_messages:
-            context.bot.send_message(chat_id=chat_id, text=msg, parse_mode=ParseMode.HTML)
+        return response
     except Exception as exc:
         logging.exception(exc)
-        msg = 'Ой, у нас что-то пошло не так. Попробуй, пожалуйста, запросить встречи чуть позже.'
-        context.bot.send_message(chat_id=chat_id, text=msg)

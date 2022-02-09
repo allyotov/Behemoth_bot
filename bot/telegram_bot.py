@@ -7,13 +7,18 @@ from bot import commands, config
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+subscribers = []
 
 def main():
+    subscribers = commands.get_subscriber_list_from_backend()
+
     behemoth_bot = Updater(config.api_key, use_context=True, request_kwargs=config.proxy)
 
     bot_dispatcher = behemoth_bot.dispatcher
 
     #bot_dispatcher.job_queue.run_repeating(commands.check_updates, interval=3, first=0, name='update_cheking', context=behemoth_bot)
+
+    # # # behemoth_bot.job_queue.run_repeating(commands.get_news, 5, context=(update.message.chat_id, context.user_data))
 
     bot_dispatcher.add_handler(CommandHandler('start', commands.hello, pass_job_queue=True))
 

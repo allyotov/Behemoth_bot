@@ -49,7 +49,7 @@ NEWS_MESSAGE_TEMPLATE = """<b><strong>{0}</strong></b>
 
 {1}
 
-{2} {3} {4} {5};
+{2} {3} {4} {5}
 """
 
 DATETIME_TEMPLATE = '%Y-%m-%dT%H:%M:%S%z'
@@ -105,22 +105,3 @@ def convert_news_to_messages(response: list[dict]) -> list[str]:
         )
         tm_messages.append(msg)
     return tm_messages, last_datetime
-
-
-
-'''
-class Meeting(BaseModel):
-    name: str
-    fragment: str
-    comment: str
-    time: str
-    intramural: int
-
-
-class NewsItem(BaseModel):
-    title: str
-    text: str
-    time_created: str
-    author: str
-
-'''

@@ -1,17 +1,14 @@
-from re import S
+from datetime import datetime
 from pydantic import BaseModel
 
 
-class Meeting(BaseModel):
-    name: str
-    fragment: str
-    comment: str
-    time: str
-    intramural: int
-
-
 class NewsItem(BaseModel):
-    title: str
+    id: int
+    updated_time: datetime
+    meeting_time: datetime or None
     text: str
-    time_created: str
-    author: str
+
+
+class Subscriber(BaseModel):
+    id: int
+    last_update: datetime
