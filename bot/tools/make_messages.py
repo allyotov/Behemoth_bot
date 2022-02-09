@@ -76,7 +76,7 @@ def convert_news_to_messages(news: list[NewsItem]) -> Tuple[list[dict], list[dic
                     datetime.strftime(newsitem.updated_time, '%Y'),
                     datetime.strftime(newsitem.updated_time, '%H:%M'),
             )
-            if datetime.now() - newsitem.meeting_time > timedelta(days=0):
+            if datetime.now() - newsitem.meeting_time > timedelta(seconds=0):
                 passed_meetings_msgs.append({'message': msg, 'update_time': newsitem.updated_time})
             else:
                 future_meetings_msgs.append({'message': msg, 'update_time': newsitem.updated_time})

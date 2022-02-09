@@ -10,7 +10,7 @@ from telegram import ParseMode
 from bot.client import Subscriber, BehemothClient as Client
 # from bot.client import Subscriber
 from bot.config import backend_url, prev_days, hello_message
-from bot.tools.json_telegram import convert_news_to_messages
+from bot.tools.make_messages import convert_news_to_messages
 from bot.tools.initial_datetime import current_datetime, week_ago_datetime
 
 
@@ -72,23 +72,33 @@ def get_news(context):
         if not news:
             logger.debug('Свежих новостей нет.')
             return
-        # passed_meetings_msgs, future_meetings_msg, news_messages = convert_news_to_messages(response)
-        # logger.info(newsitem_datetime)
 
-        # for subscriber in subscribers:
-        #     subscriber.id
-        #     if tm_messages:
-        #         context.bot.send_message(chat_id=chat_id, text='Свежие новости:')
-        #     for msg in tm_messages:
-        #         context.bot.send_message(chat_id=chat_id, text=msg, parse_mode=ParseMode.HTML)
+        passed_meetings_msgs, future_meetings_msgs, news_msgs = convert_news_to_messages(response)
         
+        present_moment = datetime.now()
 
-
-
-        # if newsitem_datetime - user_data['last_news'] > timedelta(seconds=0):
-        #     user_data['last_news'] = newsitem_datetime
-        # logger.info('---->')
-        # logger.info(user_data['last_news'])
+        for subscriber in subscribers:
+            # 1. получаем дату последнего обновления
+            last_update = subscriber.last_update
+            # 2. обрабатываем новости
+            actual_news_msgs = [msg['message'] for msg in news_msgs if msg['last_update'] - last_update > timedelta(seconds=0)]
+            if actual_news_msgs:
+                context.bot.send_message(chat_id=subscriber.id, text='Свежие новости:')
+                for msg in actual_news_msgs:
+                    context.bot.send_message(chat_id=subscriber.id, text=msg, parse_mode=ParseMode.HTML)
+            # 3. обрабатываем прошедшие встречи
+            actual_passed_meetings_msgs = [msg['message'] for msg in passed_meetings_msgs if msg['last_update'] - last_update > timedelta(seconds=0)]
+            if actual_passed_meetings_msgs:
+                context.bot.send_message(chat_id=subscriber.id, text='Состоявшиеся встречи:')
+                for msg in actual_passed_meetings_msgs:
+                    context.bot.send_message(chat_id=subscriber.id, text=msg, parse_mode=ParseMode.HTML)
+            # 4. обрабатываем предстоящие встречи
+            actual_future_meetings_msgs = [msg['message'] for msg in future_meetings_msgs if msg['last_update'] - last_update > timedelta(seconds=0)]
+            if actual_future_meetings_msgs:
+                context.bot.send_message(chat_id=subscriber.id, text='Запланированы встречи:')
+                for msg in actual_future_meetings_msgs:
+                    context.bot.send_message(chat_id=subscriber.id, text=msg, parse_mode=ParseMode.HTML)
+            # 6. сохраняем новую дату последнего обновления
 
 
     except Exception as exc:
