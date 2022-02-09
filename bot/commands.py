@@ -23,27 +23,30 @@ def convert_date_to_str(date_obj):
     return datetime.strftime(date_obj, '%Y-%m-%d-%H-%M-%S-%z')
 
 
-def check_updates(context):
-    logger.debug(context)
-    context.bot.send_message(chat_id=context.job.context, text='Здесь будет периодическая проверка новостей и встреч')
-
-
 def hello(update, context):
-    subscribers = get_subscriber_list_from_backend()
-    if not subscribers:
-        logger.debug('Пока нет ни одного подписчика, создаём нового.')
-        ids = []
-    else:
-        ids = [s.id for s in subscribers]
-        logger.debug(ids)
-    logger.info(subscribers)
-    user = update.message.from_user
-    if user['id'] not in ids:
-        # save id into backend
-        backend_client = Client(backend_url)
-        backend_client.send_subscriber(Subscriber(id=user['id'], last_update=(get_current_datetime - timedelta(days=prev_days))))
-    # if user_id not in subscribers
-    update.message.reply_text(hello_message)
+    try:
+        behemoth_client = Client(backend_url)
+        subscribers = behemoth_client.get_subscribers()
+        if not subscribers:
+            logger.debug('Пока нет ни одного подписчика, создаём нового.')
+            ids = []
+        else:
+            ids = [s.id for s in subscribers]
+            logger.debug(ids)
+        logger.info(subscribers)
+        user = update.message.from_user
+        if user['id'] not in ids:
+            # save id into backend
+            backend_client = Client(backend_url)
+            backend_client.send_subscriber(Subscriber(id=user['id'], last_update=(get_current_datetime - timedelta(days=prev_days))))
+        # if user_id not in subscribers
+        update.message.reply_text(hello_message)
+    except Exception as exc:
+        logging.exception(exc)
+        update.message.reply_text('Что-то пошло не так. Попробуйте отправить /start позже.')
+        return
+
+
 
 
 def get_news(context):
@@ -116,10 +119,3 @@ def get_earliest_last_update(subscribers):
 
 
 def get_subscriber_list_from_backend():
-    try:
-        behemoth_client = Client(backend_url)
-        response = behemoth_client.get_subscribers()
-        logger.debug(response)
-        return response
-    except Exception as exc:
-        logging.exception(exc)
