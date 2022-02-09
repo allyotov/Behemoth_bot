@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timedelta
 
-from bot.tools.schemes import Meeting, NewsItem
+from bot.tools.schemes import NewsItem
 from bot.tools.initial_datetime import current_datetime, week_ago_datetime
 
 logger = logging.getLogger(__name__)
@@ -53,36 +53,6 @@ NEWS_MESSAGE_TEMPLATE = """<b><strong>{0}</strong></b>
 """
 
 DATETIME_TEMPLATE = '%Y-%m-%dT%H:%M:%S%z'
-
-
-def convert_meetings_to_messages(response: list[dict]) -> list[str]:
-    tm_messages = []
-    last_datetime = current_datetime()
-    for result_num, meeting_str in enumerate(response, start=1):
-        meeting = Meeting(**meeting_str)
-        if meeting.intramural == '0':
-            meeting.intramural = 'В Zoom'
-        else:
-            meeting.intramural = 'Очно'
-
-        meeting_datetime = datetime.strptime(meeting.time, DATETIME_TEMPLATE)
-
-        if meeting_datetime - last_datetime > timedelta(days=0):
-            last_datetime = meeting_datetime
-
-        msg = MEETINGS_MESSAGE_TEMPLATE.format(
-            meeting.name,
-            datetime.strftime(meeting_datetime, '%d'),
-            MONTHS[datetime.strftime(meeting_datetime, '%m')],
-            datetime.strftime(meeting_datetime, '%Y'),
-            WEEKDAYS[datetime.strftime(meeting_datetime, '%w')],
-            datetime.strftime(meeting_datetime, '%H:%M'),
-            meeting.intramural,
-            meeting.fragment,
-            meeting.comment,
-        )
-        tm_messages.append(msg)
-    return tm_messages, last_datetime
 
 
 def convert_news_to_messages(response: list[dict]) -> list[str]:
