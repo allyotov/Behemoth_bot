@@ -9,7 +9,7 @@ from telegram import ParseMode
 
 from bot.client import BehemothClient as Client
 from bot.client import Subscriber
-from bot.config import backend_url
+from bot.config import backend_url, prev_days, hello_message
 from bot.tools.json_telegram import convert_news_to_messages
 from bot.tools.initial_datetime import current_datetime, week_ago_datetime
 
@@ -37,14 +37,9 @@ def hello(update, context):
     user = update.message.from_user
     if user['id'] not in ids:
         # save id into backend
-        Client.    Subscriber(id=id, last_update=last_update)
+        Client.send_subscriber(id=id, last_update=(datetime.now() - timedelta(days=prev_days)))
     # if user_id not in subscribers
-    update.message.reply_text(''.join([
-        'Привет, дорогой любитель Священного Писания! ',
-        'Тебя приветствует бот библейского кружка Бехемот. ',
-        'Он поможет тебе не пропускать очередные встречи и ',
-        ' знать какие отрывки будут читаться на них.',
-    ]))
+    update.message.reply_text(hello_message)
     return
     if 'last_news' not in context.user_data:
         context.user_data['last_news'] = week_ago_datetime()
