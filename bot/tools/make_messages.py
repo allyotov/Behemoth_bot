@@ -1,8 +1,9 @@
 import logging
 from typing import Tuple
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
-from bot.tools.schemes import NewsItem
+from bot.client import NewsItem
+from bot.tools.initial_datetime import get_current_datetime
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -24,17 +25,17 @@ MONTHS = {
 }
 
 WEEKDAYS = {
-    '0': 'понедельник',
-    '1': 'вторник',
-    '2': 'среду',
-    '3': 'четверг',
-    '4': 'пятницу',
-    '5': 'субботу',
-    '6': 'воскресенье'
+    0: 'в понедельник',
+    1: 'во вторник',
+    2: 'в среду',
+    3: 'в четверг',
+    4: 'в пятницу',
+    5: 'в субботу',
+    6: 'в воскресенье'
 }
 
 
-MEETINGS_MESSAGE_TEMPLATE = """<b><strong>Встреча в {0}</strong></b>
+MEETINGS_MESSAGE_TEMPLATE = """<b><strong>Встреча {0}</strong></b>
 <b><strong>{1} {2} {3} {4}</strong></b>
 {5}
 
@@ -76,7 +77,7 @@ def convert_news_to_messages(news: list[NewsItem]) -> Tuple[list[dict], list[dic
                     datetime.strftime(newsitem.updated_time, '%Y'),
                     datetime.strftime(newsitem.updated_time, '%H:%M'),
             )
-            if datetime.now() - newsitem.meeting_time > timedelta(seconds=0):
+            if get_current_datetime() - newsitem.meeting_time > timedelta(seconds=0):
                 passed_meetings_msgs.append({'message': msg, 'update_time': newsitem.updated_time})
             else:
                 future_meetings_msgs.append({'message': msg, 'update_time': newsitem.updated_time})

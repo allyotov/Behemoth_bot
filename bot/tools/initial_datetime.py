@@ -2,15 +2,15 @@ from datetime import datetime, timedelta
 import pytz
 
 
-def week_ago_datetime():
-    return localized_datetime(timedelta(days=7))
+def get_week_ago_datetime():
+    return get_localized_datetime(timedelta(days=7))
 
 
-def current_datetime():
-    return localized_datetime(timedelta(days=0))
+def get_current_datetime():
+    return get_localized_datetime(timedelta(days=0))
 
 
-def localized_datetime(given_timedelta):
+def get_localized_datetime(given_timedelta):
     naive = datetime.now() - given_timedelta
     timezone = pytz.timezone('Europe/Moscow')
     week_ago_date = timezone.localize(naive)
