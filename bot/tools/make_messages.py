@@ -39,7 +39,7 @@ MEETINGS_MESSAGE_TEMPLATE = """<b><strong>Встреча {0}</strong></b>
 <b><strong>{1} {2} {3} {4}</strong></b>
 {5}
 
-Отредактирована: {6}, {7}, {8}, {9}
+Отредактирована: {6} {7} {8} в {9}
 """
 
 NEWS_MESSAGE_TEMPLATE = """{0} {1} {2} {3} 

@@ -5,6 +5,7 @@ import pytz
 
 import httpx
 from telegram import ParseMode
+from bot import client
 #from telegram.ext import ConversationHandler
 
 from bot.client import Subscriber, BehemothClient as Client
@@ -83,23 +84,25 @@ def get_news(context):
             # 2. обрабатываем новости
             actual_news_msgs = [msg['message'] for msg in news_msgs if msg['update_time'] - last_update > timedelta(seconds=0)]
             if actual_news_msgs:
-                context.bot.send_message(chat_id=subscriber.id, text='Свежие новости:')
+                context.bot.send_message(chat_id=subscriber.id, text='<b>Свежие новости:</b>', parse_mode=ParseMode.HTML)
                 for msg in actual_news_msgs:
                     context.bot.send_message(chat_id=subscriber.id, text=msg, parse_mode=ParseMode.HTML)
             # 3. обрабатываем прошедшие встречи
             actual_passed_meetings_msgs = [msg['message'] for msg in passed_meetings_msgs if msg['update_time'] - last_update > timedelta(seconds=0)]
             if actual_passed_meetings_msgs:
-                context.bot.send_message(chat_id=subscriber.id, text='Состоявшиеся встречи:')
+                context.bot.send_message(chat_id=subscriber.id, text='<b>Состоявшиеся встречи:</b>', parse_mode=ParseMode.HTML)
                 for msg in actual_passed_meetings_msgs:
                     context.bot.send_message(chat_id=subscriber.id, text=msg, parse_mode=ParseMode.HTML)
             # 4. обрабатываем предстоящие встречи
             actual_future_meetings_msgs = [msg['message'] for msg in future_meetings_msgs if msg['update_time'] - last_update > timedelta(seconds=0)]
             if actual_future_meetings_msgs:
-                context.bot.send_message(chat_id=subscriber.id, text='Запланированы встречи:')
+                context.bot.send_message(chat_id=subscriber.id, text='<b>Запланированы встречи:</b>', parse_mode=ParseMode.HTML)
                 for msg in actual_future_meetings_msgs:
                     context.bot.send_message(chat_id=subscriber.id, text=msg, parse_mode=ParseMode.HTML)
             # 6. сохраняем новую дату последнего обновления
-
+            subscriber.last_update = present_moment
+            behemoth_client.edit_subscriber(subscriber)
+            logger.debug('Дата последнего обновления обновлена.')
 
     except Exception as exc:
         logging.exception(exc)
