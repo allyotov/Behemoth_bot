@@ -35,6 +35,7 @@ def hello(update, context):
             logger.debug(ids)
         logger.info(subscribers)
         user = update.message.from_user
+        logger.debug(user)
         if user['id'] not in ids:
             # save id into backend
             backend_client = Client(backend_url)
@@ -45,8 +46,6 @@ def hello(update, context):
         logging.exception(exc)
         update.message.reply_text('Что-то пошло не так. Попробуйте отправить /start позже.')
         return
-
-
 
 
 def get_news(context):
@@ -60,7 +59,7 @@ def get_news(context):
             logger.debug('Нет ни одного подписчика.')
             return
         logger.debug(subscribers)
-        
+
         # 2. определяем наименьшую дату последнего обновелния среди них
         earliest_last_update = get_earliest_last_update(subscribers)
         logger.debug(earliest_last_update)
@@ -108,7 +107,7 @@ def get_news(context):
             logger.debug('Дата последнего обновления обновлена.')
 
     except Exception as exc:
-        logging.exception(exc)
+        logger.exception(exc)
         msg = 'Ой, у нас что-то пошло не так. Попробуй, пожалуйста, запросить встречи чуть позже.'
         # context.bot.send_message(chat_id=chat_id, text=msg)
         logger.debug(msg)
@@ -118,4 +117,5 @@ def get_earliest_last_update(subscribers):
     return min([s.last_update for s in subscribers])
 
 
-def get_subscriber_list_from_backend():
+def deactivate_subscriber(update, context):
+    logger.debug('Деактивация пользователя запущена!')
