@@ -14,3 +14,6 @@ proxy = {
         'password': proxy_password,
     },
 }
+
+prev_days = int(os.environ['PREV_DAYS'])
+hello_message = os.environ['HELLO_MESSAGE']

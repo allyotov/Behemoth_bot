@@ -4,7 +4,7 @@ from telegram.ext import CommandHandler, Updater
 
 from bot import commands, config
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -15,7 +15,13 @@ def main():
 
     #bot_dispatcher.job_queue.run_repeating(commands.check_updates, interval=3, first=0, name='update_cheking', context=behemoth_bot)
 
+    # # # behemoth_bot.job_queue.run_repeating(commands.get_news, 5, context=(update.message.chat_id, context.user_data))
+
     bot_dispatcher.add_handler(CommandHandler('start', commands.hello, pass_job_queue=True))
+
+    # bot_dispatcher.add_handler(CommandHandler('news', commands.get_news))
+
+    # bot_dispatcher.add_handler(CommandHandler('meetings', commands.get_meetings))
 
     logger.info('Бот стартовал;')
 

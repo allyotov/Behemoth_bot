@@ -9,6 +9,7 @@ python = "^3.9"
 python-telegram-bot = {extras = ["socks"], version = "^13.10"}
 httpx = "^0.22.0"
 pydantic = "^1.9.0"
+orjson = "^3.6.6"
 
 [tool.poetry.dev-dependencies]
 
