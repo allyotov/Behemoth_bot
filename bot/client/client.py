@@ -31,6 +31,7 @@ class BehemothClient:
             logger.debug(subscriber)
             logger.debug(type(subscriber))
             logger.debug(subscriber.last_update)
+            logger.info(subscriber.active)
             r = httpx.post(
                 url=self.subscribers_url,
                 content=subscriber.json(),
