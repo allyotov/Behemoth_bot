@@ -40,22 +40,19 @@ def hello(update, context):
             need_to_send_news = True
             update.message.reply_text(hello_message)
         else:
-            subscribers = behemoth_client.get_subscribers(**{'id': user['id']})
-            logger.debug('\n\n\n\n\nSubscribers:')
-            logger.debug(subscribers)
-            subscriber = subscribers[0]
+            subscriber = behemoth_client.get_subscribers(**{'id': user['id']})[0]
             if not subscriber.active:
                 subscriber.active = True
                 behemoth_client.edit_subscriber(subscriber)
                 update.message.reply_text('C возвращением! Теперь мы снова будем присылать вам новости и оповещения о запланированных встречах.')
                 subscriber, week_more = set_subscriber_last_update_after_comeback(subscriber)
                 need_to_send_news = True
-        update.message.reply_text('/mute - приостановка рассылки;\nnext - напомнить 2 следующие встречи;\nprev - напомнить 2 предыдущие встречи.')
+        update.message.reply_text('/mute - приостановка рассылки;\n/next - напомнить 2 следующие встречи;\n/prev - напомнить 2 предыдущие встречи.')
         if need_to_send_news:
-            title_message='Новости за последнюю неделю'
+            title_message='За последнюю неделю'
             no_news_message='За последнюю неделю не было новостей'
             if not week_more:
-                title_message='Пока вас не было, появились такие новости:'
+                title_message='Пока вас не было'
                 no_news_message='Пока вас не было, новостей не приходило.'
             send_updates_to_subscribers(subscribers=[subscriber], 
                                         b_client=behemoth_client, 
@@ -129,10 +126,10 @@ def mute(update, context):
             update.message.reply_text('C возвращением! Теперь мы снова будем присылать вам новости и оповещения о запланированных встречах.')
             subscriber, week_more = set_subscriber_last_update_after_comeback(subscriber)
             if week_more:
-                title_message='Новости за последнюю неделю'
+                title_message='За последнюю неделю'
                 no_news_message='За последнюю неделю не было новостей'
             else:
-                title_message='Пока вас не было, появились такие новости:'
+                title_message='Пока вас не было'
                 no_news_message='Пока вас не было, новостей не приходило.'
             send_updates_to_subscribers(subscribers=[subscriber], 
                                         b_client=behemoth_client, 
