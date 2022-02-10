@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional
+from xmlrpc.client import boolean
 
 from pydantic import BaseModel
 
@@ -7,6 +8,7 @@ from pydantic import BaseModel
 class Subscriber(BaseModel):
     id: int
     last_update: datetime
+    active: boolean
 
 
 class NewsItem(BaseModel):
