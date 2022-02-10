@@ -74,19 +74,19 @@ def get_news(context):
         behemoth_client = Client(backend_url)
         
         # 1. запрашиваем подписчиков в бекенде
-        subscribers = behemoth_client.get_subscribers()
+        subscribers = behemoth_client.get_subscribers(**{'active': True})
         if not subscribers:
-            logger.debug('Нет ни одного подписчика.')
+            logger.debug('Нет ни одного активного подписчика.')
             return
         logger.debug(subscribers)
-        for subscriber in subscribers:
-            try:
-                logger.debug(context.bot.get_chat_member(subscriber.id, subscriber.id))
-                context.bot.sendChatAction(chat_id=subscriber.id, action=telegram.ChatAction.TYPING)
-                logger.debug('TYPING успешно отправлено.')
-            except Exception as exc:
-                logger.debug('что-то не так с пользователем')
-                logger.exception(exc)
+        # for subscriber in subscribers:
+        #     try:
+        #         logger.debug(context.bot.get_chat_member(subscriber.id, subscriber.id))
+        #         context.bot.sendChatAction(chat_id=subscriber.id, action=telegram.ChatAction.TYPING)
+        #         logger.debug('TYPING успешно отправлено.')
+        #     except Exception as exc:
+        #         logger.debug('что-то не так с пользователем')
+        #         logger.exception(exc)
         
         send_updates_to_subscribers(subscribers=subscribers, b_client=behemoth_client, bot=context.bot)
 
@@ -101,8 +101,12 @@ def get_earliest_last_update(subscribers):
     return min([s.last_update for s in subscribers])
 
 
-def deactivate_subscriber(update, context):
-    logger.debug('Деактивация пользователя запущена!')
+def deactivate_user(update, context):
+    logger.debug('\n' * 10)
+    logger.debug(update.my_chat_member.new_chat_member)
+    logger.debug(update.my_chat_member.new_chat_member.status)
+    logger.debug('\n' * 10)
+
 
 def mute(update, context):
     try:
@@ -113,7 +117,6 @@ def mute(update, context):
             logger.debug(update.message.chat.id)
             logger.debug('Почему-то нет такого подписчика в базе.')
         subscriber = subscribers[0]
-        logger.debug('\n\n\n\n\n\n\n\n\n')
         logger.debug(subscriber.active)
         if subscriber.active:
             subscriber.active = False
