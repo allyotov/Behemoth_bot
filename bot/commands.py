@@ -102,10 +102,17 @@ def get_earliest_last_update(subscribers):
 
 
 def deactivate_user(update, context):
-    logger.debug('\n' * 10)
-    logger.debug(update.my_chat_member.new_chat_member)
-    logger.debug(update.my_chat_member.new_chat_member.status)
-    logger.debug('\n' * 10)
+    try:
+        if update.my_chat_member.new_chat_member.status == 'kicked':
+            logger.debug('Пользователь удалил и заблокировал чат.')
+            behemoth_client = Client(backend_url)
+            subscribers = behemoth_client.get_subscribers(**{'id': update.my_chat_member.chat.id})
+            subscriber = subscribers[0]
+            logger.debug(subscriber.active)
+            subscriber.active = False
+            behemoth_client.edit_subscriber(subscriber)
+    except Exception as exc:
+        logger.exception(exc)
 
 
 def mute(update, context):
