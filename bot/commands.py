@@ -72,28 +72,17 @@ def get_news(context):
     logger.debug('Проверяем новости в бекенде.')
     try:
         behemoth_client = Client(backend_url)
-        
         # 1. запрашиваем подписчиков в бекенде
         subscribers = behemoth_client.get_subscribers(**{'active': True})
         if not subscribers:
             logger.debug('Нет ни одного активного подписчика.')
             return
         logger.debug(subscribers)
-        # for subscriber in subscribers:
-        #     try:
-        #         logger.debug(context.bot.get_chat_member(subscriber.id, subscriber.id))
-        #         context.bot.sendChatAction(chat_id=subscriber.id, action=telegram.ChatAction.TYPING)
-        #         logger.debug('TYPING успешно отправлено.')
-        #     except Exception as exc:
-        #         logger.debug('что-то не так с пользователем')
-        #         logger.exception(exc)
-        
         send_updates_to_subscribers(subscribers=subscribers, b_client=behemoth_client, bot=context.bot)
 
     except Exception as exc:
         logger.exception(exc)
         msg = 'Ой, у нас что-то пошло не так. Попробуй, пожалуйста, запросить встречи чуть позже.'
-        # context.bot.send_message(chat_id=chat_id, text=msg)
         logger.debug(msg)
 
 
@@ -214,3 +203,48 @@ def set_subscriber_last_update_after_comeback(subscriber: Subscriber) -> Tuple[S
         week_more = True
         subscriber.last_update = (get_current_datetime() - timedelta(days=prev_days))
     return subscriber, week_more
+
+
+def get_prev_meetings(update, context):
+    closest_meetings(chat_id=update.message.chat.id, bot=context.bot, period='to', closest_meetings=2)
+    
+
+def get_next_meetings(update, context):
+    closest_meetings(chat_id=update.message.chat.id, bot=context.bot, period='from', closest_meetings=2)
+
+
+def closest_meetings(chat_id, bot, period='from', closest_meetings=2):
+    parameters = {'period': period,
+                'date': datetime.strftime(get_current_datetime(), '%Y-%m-%d-%H-%M-%S-%z'),
+                'closest_meetings': closest_meetings}
+
+    try:
+        behemoth_client = Client(backend_url)
+        news = behemoth_client.search_news(**parameters)
+        logger.debug(news)
+        logger.debug(type(news))
+
+        if not news:
+            if period == 'from':
+                title_msg = 'Пока нет сведений о предстоящих встречах.'
+            else:
+                title_msg = 'Пока нет сведений о состоявшихся встречах.'
+            bot.send_message(chat_id=chat_id, text=title_msg)
+            return
+
+        passed_meetings_msgs, future_meetings_msgs, _ = convert_news_to_messages(news)
+
+        meetings_msgs = [msg_dict['message'] for msg_dict in passed_meetings_msgs + future_meetings_msgs]
+
+        if period == 'from':
+            title_msg = '<b>Ближайшие встречи:</b>'
+        else:
+            title_msg = '<b><Последние состоявшиеся встречи:</b>'
+
+        bot.send_message(chat_id=chat_id, text=title_msg, parse_mode=ParseMode.HTML)
+        logger.debug(meetings_msgs)
+        for msg in meetings_msgs:
+            bot.send_message(chat_id=chat_id, text=msg, parse_mode=ParseMode.HTML)
+    except Exception as exc:
+        logger.exception(exc)
+        bot.send_message(chat_id=chat_id, text='Что-то пошло не так. Попробуйте отправить команду позже.', parse_mode=ParseMode.HTML)

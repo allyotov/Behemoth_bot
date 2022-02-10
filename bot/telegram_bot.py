@@ -18,8 +18,10 @@ def main():
     behemoth_bot.job_queue.run_repeating(commands.get_news, 5)
 
 
-    bot_dispatcher.add_handler(CommandHandler('start', commands.hello, pass_job_queue=True))
+    bot_dispatcher.add_handler(CommandHandler('start', commands.hello))
     bot_dispatcher.add_handler(CommandHandler('mute', commands.mute))
+    bot_dispatcher.add_handler(CommandHandler('next', commands.get_next_meetings))
+    bot_dispatcher.add_handler(CommandHandler('prev', commands.get_prev_meetings))
 
 
     logger.info('Бот стартовал;')
