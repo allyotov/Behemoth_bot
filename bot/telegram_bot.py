@@ -15,8 +15,8 @@ def main():
 
     bot_dispatcher.add_handler(ChatMemberHandler(commands.deactivate_user))
 
-    behemoth_bot.job_queue.run_repeating(commands.get_news, 5)
 
+    behemoth_bot.job_queue.run_repeating(commands.get_news, config.check_news_period)
 
     bot_dispatcher.add_handler(CommandHandler('start', commands.hello))
     bot_dispatcher.add_handler(CommandHandler('mute', commands.mute))
