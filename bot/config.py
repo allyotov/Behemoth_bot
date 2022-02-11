@@ -17,3 +17,4 @@ proxy = {
 
 prev_days = int(os.environ['PREV_DAYS'])
 hello_message = os.environ['HELLO_MESSAGE']
+check_news_period = int(os.environ['NEWS_CHECK_PERIOD'])
