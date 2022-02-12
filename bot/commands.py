@@ -36,7 +36,7 @@ def hello(update, context):
         logger.debug(user)
         need_to_send_news = False
         if user['id'] not in ids:
-            behemoth_client.send_subscriber(Subscriber(id=user['id'], last_update=(get_current_datetime() - timedelta(days=prev_days))))
+            behemoth_client.send_subscriber(Subscriber(id=user['id'], last_update=(get_current_datetime() - timedelta(days=prev_days)), active=True))
             need_to_send_news = True
             update.message.reply_text(hello_message)
         else:
