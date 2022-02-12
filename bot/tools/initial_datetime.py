@@ -12,7 +12,7 @@ def get_current_datetime():
 
 def get_localized_datetime(given_timedelta):
     naive = datetime.now() - given_timedelta
-    timezone = pytz.timezone('Europe/Moscow')
+    timezone = pytz.utc
     week_ago_date = timezone.localize(naive)
     return week_ago_date
 
