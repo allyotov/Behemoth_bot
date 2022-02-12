@@ -35,6 +35,7 @@ def hello(update, context):
         user = update.message.from_user
         logger.debug(user)
         need_to_send_news = False
+        week_more = True
         if user['id'] not in ids:
             behemoth_client.send_subscriber(Subscriber(id=user['id'], last_update=(get_current_datetime() - timedelta(days=prev_days)), active=True))
             need_to_send_news = True
@@ -239,7 +240,7 @@ def closest_meetings(chat_id, bot, period='from', closest_meetings=2):
         if period == 'from':
             title_msg = '<b>Ближайшие встречи:</b>'
         else:
-            title_msg = '<b><Последние состоявшиеся встречи:</b>'
+            title_msg = '<b>Последние состоявшиеся встречи:</b>'
 
         bot.send_message(chat_id=chat_id, text=title_msg, parse_mode=ParseMode.HTML)
         logger.debug(meetings_msgs)
