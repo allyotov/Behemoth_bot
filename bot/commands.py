@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from typing import Tuple
 
 from telegram import ParseMode
-import telegram
 
 
 from bot.client import Subscriber, BehemothClient as Client
@@ -22,6 +21,7 @@ def convert_date_to_str(date_obj):
 
 
 def hello(update, context):
+    logger.debug('\n\n\n\n\nProcessing /start command')
     try:
         behemoth_client = Client(backend_url)
         subscribers = behemoth_client.get_subscribers()
@@ -31,13 +31,21 @@ def hello(update, context):
         else:
             ids = [s.id for s in subscribers]
             logger.debug(ids)
-        logger.info(subscribers)
+        logger.debug(subscribers)
         user = update.message.from_user
-        logger.debug(user)
+        logger.debug('user from update.message.from_user: %s' % user)
         need_to_send_news = False
         week_more = True
         if user['id'] not in ids:
-            subscriber = Subscriber(id=user['id'], last_update=(get_current_datetime() - timedelta(days=prev_days)), active=True)
+            subscriber = Subscriber(
+                            id=user['id'], 
+                            last_update=(get_current_datetime() - timedelta(days=prev_days)), 
+                            active=True,
+                            username=user['username'],
+                            first_name=user['first_name'],
+                            last_name=user['last_name']
+                        )
+
             behemoth_client.send_subscriber(subscriber)
             need_to_send_news = True
             update.message.reply_text(hello_message)

@@ -12,3 +12,6 @@ class NewsItem(BaseModel):
 class Subscriber(BaseModel):
     id: int
     last_update: datetime
+    username: str
+    first_name: str or None
+    last_name: str or None
