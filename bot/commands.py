@@ -22,6 +22,7 @@ def convert_date_to_str(date_obj):
 
 
 def hello(update, context):
+    logger.debug('\n\n\n\n\nProcessing /start command')
     try:
         behemoth_client = Client(backend_url)
         subscribers = behemoth_client.get_subscribers()
@@ -31,13 +32,23 @@ def hello(update, context):
         else:
             ids = [s.id for s in subscribers]
             logger.debug(ids)
-        logger.info(subscribers)
+        logger.debug(subscribers)
         user = update.message.from_user
-        logger.debug(user)
+        '''
+        user variable content:
+        {'language_code': 'en', 
+        'username': 'al_lyotov', # - to be subscriber field 
+        'first_name': 'Александр', # - to be subscriber field
+        'is_bot': False,
+        'last_name': 'Лётов', # - to be subscriber field
+        'id': 1450231051} # - already subcriber field
+        '''
+        logger.debug('user from update.message.from_user: %s' % user)
         need_to_send_news = False
         week_more = True
         if user['id'] not in ids:
             subscriber = Subscriber(id=user['id'], last_update=(get_current_datetime() - timedelta(days=prev_days)), active=True)
+
             behemoth_client.send_subscriber(subscriber)
             need_to_send_news = True
             update.message.reply_text(hello_message)
