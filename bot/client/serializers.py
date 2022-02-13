@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Optional
-from xmlrpc.client import boolean
 
 from pydantic import BaseModel
 
@@ -8,7 +7,7 @@ from pydantic import BaseModel
 class Subscriber(BaseModel):
     id: int
     last_update: datetime
-    active: boolean
+    active: bool
     username: str
     first_name: Optional[str]
     last_name: Optional[str]
