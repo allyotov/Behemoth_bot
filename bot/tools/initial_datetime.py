@@ -1,5 +1,11 @@
+from calendar import week
 from datetime import datetime, timedelta
+import logging
 import pytz
+
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 def get_week_ago_datetime():
@@ -11,10 +17,9 @@ def get_current_datetime():
 
 
 def get_localized_datetime(given_timedelta):
-    naive = datetime.now() - given_timedelta
-    # timezone = pytz.utc
     timezone = pytz.timezone('Europe/Moscow')
-    week_ago_date = timezone.localize(naive)
-    return week_ago_date
+    needed_date = datetime.now(timezone) - given_timedelta
+    logger.debug('NAIVE DATE: %s' % needed_date)
+    return needed_date
 
 

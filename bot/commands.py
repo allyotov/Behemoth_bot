@@ -177,6 +177,7 @@ def send_updates_to_subscribers(subscribers, b_client, bot, title_message=None, 
     passed_meetings_msgs, future_meetings_msgs, news_msgs = convert_news_to_messages(news)
     
     present_moment = get_current_datetime()
+    logger.debug('PRESENT MOMENT: %s' % present_moment)
 
     for subscriber in subscribers:
         if title_message:
