@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 def main():
     sentry_sdk.init(config.sentry_key, traces_sample_rate=1.0)
 
-    behemoth_bot = Updater(config.api_key, use_context=True, request_kwargs=config.proxy)
+    behemoth_bot = Updater(config.api_key, use_context=True)
     bot_dispatcher = behemoth_bot.dispatcher
 
     bot_dispatcher.add_handler(ChatMemberHandler(commands.deactivate_user))
