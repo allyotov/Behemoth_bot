@@ -8,7 +8,7 @@ class Subscriber(BaseModel):
     id: int
     last_update: datetime
     active: bool
-    username: str
+    username: Optional[str]
     first_name: Optional[str]
     last_name: Optional[str]
 
